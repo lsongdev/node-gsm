@@ -12,5 +12,8 @@
     "modem",
     "pdu"
   ],
-  "description": ""
+  "description": "",
+  "dependencies": {
+    "serialport": "^4.0.3"
+  }
 }
