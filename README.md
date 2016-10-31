@@ -6,16 +6,17 @@ gsm modem module for node.js
 ### Installtion
 
 ```bash
-~$ npm i https://github.com/song940/node-gsm-modem --save
+~$ npm i gsm2 --save
 ```
 
 ### Example
 
 ```js
-const GSMModem = require('../');
-const Message  = require('../pdu');
+const gsm     = require('gsm2');
+const Modem   = require('gsm2/modem');
+const Message = require('gsm2/pdu');
 
-const modem = new GSMModem('/dev/gsm-modem');
+const modem = new Modem('/dev/gsm-modem');
 
 modem.open(function(err){
 

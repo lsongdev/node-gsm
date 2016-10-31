@@ -12,9 +12,10 @@ const _ = {
   GMR : 'AT+GMR=?' ,
   CSQ : 'AT+CSQ=?' ,
   CIMI: 'AT+CIMI'  ,
-  CMGF: 'AT+CMGF?' ,
+  CMGF: 'AT+CMGF=1' ,
   CSCA: 'AT+CSCA?' ,
   CMGL: 'AT+CMGL=4',
+  CMGR: 'AT+CMGR=4',
 };
 
 module.exports = _;

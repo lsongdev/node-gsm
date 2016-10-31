@@ -1,5 +1,5 @@
 {
-  "name": "node-gsm-modem",
+  "name": "gsm2",
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
@@ -12,8 +12,20 @@
     "modem",
     "pdu"
   ],
-  "description": "",
+  "description": "gsm modem module for node.js",
   "dependencies": {
     "serialport": "^4.0.3"
-  }
+  },
+  "directories": {
+    "example": "example"
+  },
+  "devDependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/song940/node-gsm-modem.git"
+  },
+  "bugs": {
+    "url": "https://github.com/song940/node-gsm-modem/issues"
+  },
+  "homepage": "https://github.com/song940/node-gsm-modem#readme"
 }
