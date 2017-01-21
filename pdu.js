@@ -49,7 +49,7 @@ PDU.TYPES = {
  * @wiki https://en.wikipedia.org/wiki/Data_Coding_Scheme
  */
 PDU.DCS = {
-  BIT7: 0x00
+  BIT7: 0x00,
   BIT8: 0x01,
   UCS2: 0x02
 };
