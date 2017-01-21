@@ -16,7 +16,10 @@ function Modem(options){
     return new Modem(options);
 
   EventEmitter.call(this);
-
+  
+  if(typeof(options)!='object')options={
+	port: options
+  };
   this.port = new SerialPort(options.port, { 
     autoOpen: false,
     baudrate: options.baudrate || 115200
