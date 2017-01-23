@@ -10,7 +10,6 @@ $ npm i gsm2
 
 ### Example
 
-
 ```js
 const gsm     = require('gsm2');
 const Message = require('gsm2/pdu');
@@ -22,7 +21,6 @@ modem.open(function(err){
   modem.on('message', function(message){
     console.log('gsm modem received sms message',message);
   });
-
 
   modem.on('ring', function(number){
     cnsole.log('gsm modem have a phone call from %s', number);
@@ -43,6 +41,18 @@ modem.open(function(err){
   
   modem.call('+8618510100102', function(err){
     //err: busy or hangup
+    setTimeout(function(){
+      modem.hangup();
+    }, 3000);
+  });
+  
+  
+  modem.GPRS('apn', 'user', 'pass'， function(err, request){
+    
+    request.get('http://api.lsong.org/ip', function(err, response){
+      console.log(err, response);
+    })
+    
   });
 
 });
