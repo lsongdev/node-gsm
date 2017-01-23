@@ -2,6 +2,8 @@
 
 gsm modem module for node.js
 
+***[WORKING IN PROGRESS, PLEASE DO NOT USE IN PRODUCTION MODE]***
+
 ### Installation
 
 ```bash
