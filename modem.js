@@ -1,12 +1,10 @@
 "use strict";
-
 const util         = require('util');
 const EventEmitter = require('events');
 const SerialPort   = require('serialport');
 
 const PDU          = require('./pdu');
 const commands     = require('./commands');
-
 /**
  * [Modem description]
  * @param {[type]} options [description]
@@ -14,91 +12,57 @@ const commands     = require('./commands');
 function Modem(options){
   if(!(this instanceof Modem))
     return new Modem(options);
-
   EventEmitter.call(this);
-
-  this.port = new SerialPort(options.port, { 
-    autoOpen: false,
-    baudrate: options.baudrate || 115200
-  });
-  this.port.on('data', function(buf){
+  this.queue = [];
+  this.device = new SerialPort(options.port, options);
+  this.device.on('data', function(buf){
     console.log(buf.toString());
   });
+  return this;
 }
 
 util.inherits(Modem, EventEmitter);
-
 /**
  * [open description]
- * @param  {Function} done [description]
- * @return {[type]}        [description]
+ * @return {[type]} [description]
  */
 Modem.prototype.open = function(){
   var self = this;
-  this.port.open(function(err){
+  this.device.open(function(err){
     console.log('open');
-    self.command(commands.AT);
-    // self.command(commands.ATZ);
-    // self.echo(!true);
-    // self.mode();
-    // self.command(commands.ATQ, 0);
-    // self.command(commands.GMR);
-    // self.command('AT+CSCS?');
-    setTimeout(function(){
-      self.command(commands.CMGR);
-    }, 5000);
   });
 };
 /**
- * [command description]
- * @param  {[type]} command [description]
- * @return {[type]}         [description]
- *
- * TEST: AT+CXXX=?
- * QUERY: AT+CXXX?
- * SET: AT+CXXX=<...>,[<...>]
- * EXEC: AT+CXXX
- * 
+ * [write description]
+ * @param  {[type]} data [description]
+ * @return {[type]}      [description]
  */
-Modem.prototype.command = function(command){
-  var args = arguments;
-  command = command.replace(/\{(\d+)}/g, function(_, n){
-    return args[ +n + 1 ];
+Modem.prototype.write = function(data){
+  var command = { data };
+  command.promise = new Promise((accept, reject) => {
+    command.callback = function(err, res){
+      if(err) return reject(err);
+      accept(res);
+    };
   });
-  this.port.write(command + commands.CR);
+  this.queue.push(command);
+  return command.promise;
 };
 
-Modem.prototype.echo = function(echo){
-  echo = echo || false;
-  return this.command(commands.ATE, +echo);
+Modem.prototype.test = function(cmd){
+  return this.write(`AT+${cmd}?`);
 };
 
-Modem.prototype.mode = function(mode){
-  mode = mode || false;
-  return this.command(commands.CMGF, +mode);
+Modem.prototype.exec = function(cmd){
+  return this.write(`AT+${cmd}`);
 };
 
-Modem.prototype.send =
-Modem.prototype.sendSMS = function(message, callback){
-  if(!(message instanceof PDU)) 
-    message = new PDU(message);
-
-  var str = message.toString();
-  this.command(commands.SMS_SEND, str);
+Modem.prototype.get = function(name){
+  return this.write(`AT+${name}=?`);
 };
 
-Modem.prototype.getSMS = function(index, callback){
-
-};
-
-Modem.prototype.delSMS = function(index, callback){
-
-};
-
-Modem.prototype.getSignalStrength = function(callback){
-  this.command(commands.CSQ, function(res){
-    callback(res.value);
-  })
+Modem.prototype.set = function(name, value){
+  return this.write(`AT+${name}=${value}`);
 };
 
 module.exports = Modem;
