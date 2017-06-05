@@ -65,4 +65,35 @@ Modem.prototype.set = function(name, value){
   return this.write(`AT+${name}=${value}`);
 };
 
+Modem.prototype.call = function(number, mgsm) {
+  return this.write(`ATD${number};`);
+};
+
+Modem.prototype.hangup = function() {
+  return this.write('ATH');
+};
+
+Modem.prototype.imei = function(value, imei) {
+  value = [ 
+    value, 7, value ? imei : null 
+  ].filter(Boolean).join(',');
+  return this.set('EGMR', value);
+};
+
+Modem.prototype.debug = function(n){
+  return this.set('CMEE', n | 0);
+};
+
+Modem.prototype.reset = function(value) {
+  return this.write('ATZ');
+};
+
+Modem.prototype.save = function(n){
+  return this.write('AT&W');
+};
+
+Modem.prototype.factory = function() {
+  return this.write('AT&F');
+};
+
 module.exports = Modem;
