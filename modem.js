@@ -29,14 +29,31 @@ function Modem(port, options){
     buffer += chunk;
     var parts = buffer.split(/[\r|\n]/g);
     parts = parts.filter(Boolean);
-    if(~parts.indexOf('OK')){
+    var code = parts.slice(-1)[0];
+    if(code && (code === 'OK' || ~code.indexOf('ERROR'))){
       this.emit('message', parts);
       buffer = '';
     }
   });
   this.queue = async.queue(function(task, done){
-    self.write(task.data);
-    done();
+    function onMessage(message){
+      clearInterval(timer);
+      clearTimeout(timeout);
+      task.accept(message);
+      self.removeListener('message', onMessage);
+      done();
+    }
+    self.on('message', onMessage);
+    var timer = setInterval(() => {
+      self.write(task.data + '\r');
+    }, 500);
+    var timeout = setTimeout(() => {
+      done();
+      clearInterval(timer);
+      console.log('timeout');
+      // task.reject(new Error('timeout'));
+      self.removeListener('message', onMessage);
+    }, 3000);
   });
   return this;
 };
@@ -44,7 +61,13 @@ function Modem(port, options){
 util.inherits(Modem, SerialPort);
 
 Modem.prototype.send = function(data){
-  this.write(data + '\r');
+  var command = { data: data };
+  command.promise = new Promise((accept, reject) => {
+    command.accept = accept;
+    command.reject = reject;
+  });
+  this.queue.push(command);
+  return command.promise;
 };
 
 Modem.prototype.test = function(cmd){
