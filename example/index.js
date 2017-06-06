@@ -1,23 +1,21 @@
 const gsm = require('..');
 
-const modem = new gsm.Modem({
-  port: '/dev/tty.usbserial'
+const modem = new gsm.Modem(
+  '/dev/tty.usbserial'
+);
+
+modem.on('error', err => {
+	console.log(err);
 });
 
-gsm.test('CMGF').then(() => {
-  
-  gsm.exec('CMGF').then(res => {
-  	console.log(res);
-  });
-
+modem.on('message', message => {
+	console.log(message);
 });
 
-gsm.get('CMXX').then(value => {
-	console.log(value);
-});
-
-gsm.set('CMXX', 1).then(res => {
-
-});
-
-gsm.write('xxx');
+modem.open(() => {
+	console.log('Ready!');
+	// modem.send('ATZ');
+	modem.send('ATI');
+	modem.send('ATI');
+	// modem.flush();
+})

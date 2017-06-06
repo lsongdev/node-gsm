@@ -1,76 +1,74 @@
 "use strict";
 const util         = require('util');
+const async        = require('async');
 const EventEmitter = require('events');
 const SerialPort   = require('serialport');
-
 const PDU          = require('./pdu');
-const commands     = require('./commands');
 /**
  * [Modem description]
  * @param {[type]} options [description]
  */
-function Modem(options){
+function Modem(port, options){
+  const self = this;
   if(!(this instanceof Modem))
-    return new Modem(options);
-  EventEmitter.call(this);
-  this.queue = [];
-  this.device = new SerialPort(options.port, options);
-  this.device.on('data', function(buf){
-    console.log(buf.toString());
+    return new Modem(port, options);
+  var defaults = {
+    dataBits: 8,
+    stopBits: 1,
+    parity: 'none',
+    baudRate: 9600,
+    autoOpen: false
+  };
+  for(var k in options)
+    defaults[k] = options[k];
+  this.options = defaults;
+  this.options.parser = SerialPort.parsers.raw;
+  SerialPort.call(this, port, this.options);
+  var buffer = '';
+  this.on('data', function(chunk){
+    buffer += chunk;
+    var parts = buffer.split(/[\r|\n]/g);
+    parts = parts.filter(Boolean);
+    if(~parts.indexOf('OK')){
+      this.emit('message', parts);
+      buffer = '';
+    }
+  });
+  this.queue = async.queue(function(task, done){
+    self.write(task.data);
+    done();
   });
   return this;
-}
-
-util.inherits(Modem, EventEmitter);
-/**
- * [open description]
- * @return {[type]} [description]
- */
-Modem.prototype.open = function(){
-  var self = this;
-  this.device.open(function(err){
-    console.log('open');
-  });
 };
-/**
- * [write description]
- * @param  {[type]} data [description]
- * @return {[type]}      [description]
- */
-Modem.prototype.write = function(data){
-  var command = { data };
-  command.promise = new Promise((accept, reject) => {
-    command.callback = function(err, res){
-      if(err) return reject(err);
-      accept(res);
-    };
-  });
-  this.queue.push(command);
-  return command.promise;
+
+util.inherits(Modem, SerialPort);
+
+Modem.prototype.send = function(data){
+  this.write(data + '\r');
 };
 
 Modem.prototype.test = function(cmd){
-  return this.write(`AT+${cmd}?`);
+  return this.send(`AT+${cmd}?`);
 };
 
 Modem.prototype.exec = function(cmd){
-  return this.write(`AT+${cmd}`);
+  return this.send(`AT+${cmd}`);
 };
 
 Modem.prototype.get = function(name){
-  return this.write(`AT+${name}=?`);
+  return this.send(`AT+${name}=?`);
 };
 
 Modem.prototype.set = function(name, value){
-  return this.write(`AT+${name}=${value}`);
+  return this.send(`AT+${name}=${value}`);
 };
 
 Modem.prototype.call = function(number, mgsm) {
-  return this.write(`ATD${number};`);
+  return this.send(`ATD${number};`);
 };
 
 Modem.prototype.hangup = function() {
-  return this.write('ATH');
+  return this.send('ATH');
 };
 
 Modem.prototype.imei = function(value, imei) {
@@ -85,15 +83,15 @@ Modem.prototype.debug = function(n){
 };
 
 Modem.prototype.reset = function(value) {
-  return this.write('ATZ');
+  return this.send('ATZ');
 };
 
 Modem.prototype.save = function(n){
-  return this.write('AT&W');
+  return this.send('AT&W');
 };
 
 Modem.prototype.factory = function() {
-  return this.write('AT&F');
+  return this.send('AT&F');
 };
 
 module.exports = Modem;

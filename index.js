@@ -1,3 +1,11 @@
+
+
+function GSM(){
+	
+}
+
 // exports
-exports.PDU   = require('./pdu');
-exports.Modem = require('./modem');
+GSM.PDU   = require('./pdu');
+GSM.Modem = require('./modem');
+
+module.exports = GSM;
