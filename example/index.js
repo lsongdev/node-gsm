@@ -5,27 +5,33 @@ const modem = new gsm.Modem(
   '/dev/tty.usbserial'
 );
 
-var timer = null;
-
 modem.on('error', err => {
-	console.log(err);
+  console.log(err);
 });
 
-// modem.on('message', message => {
-// 	console.log(message);
-// });
+modem.on('message', message => {
+  // console.log(message);
+});
+
+modem.on('open', () => {
+  console.log('Ready!');
+});
+
+modem.on('+CRING', (type) => {
+  console.log('RING!', type);
+});
+
+modem.on('+CLIP', (number) => {
+  console.log('Incoming call:', number);
+});
 
 modem.open(() => {
 
-	co(function*(){
+co(function*(){
 
-		console.log('Ready!');
-		console.log(yield modem.send('ATZ'));
-		console.log(yield modem.send('ATZ'));
-		console.log(yield modem.send('ATI'));
-		console.log(yield modem.test('CMGF'));
-		console.log(yield modem.set('CMGF', 4));
-		console.log(yield modem.get('CSQ'));
+  console.log(yield modem.reset());
 
-	});
-})
+});
+
+});
+
