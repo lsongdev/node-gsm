@@ -5,31 +5,24 @@ const modem = new gsm.Modem(
   '/dev/tty.usbserial'
 );
 
-modem.on('error', err => {
-  console.log(err);
-});
-
-modem.on('message', message => {
-  // console.log(message);
-});
-
-modem.on('open', () => {
-  console.log('Ready!');
-});
-
-modem.on('+CRING', (type) => {
-  console.log('RING!', type);
-});
-
+modem.on('+CRING', console.log)
 modem.on('+CLIP', (number) => {
-  console.log('Incoming call:', number);
+  console.log('Incoming Call', number);
+})
+modem.on('+CMTI', () => {
+  console.log('Incoming Message');
+});
+modem.on('message', (message, m) => {
+  // console.log(message);
 });
 
 modem.open(() => {
 
 co(function*(){
 
-  console.log(yield modem.reset());
+	yield modem.reset()
+	yield modem.sms_mode(1)
+	console.log(yield modem.sms_send('+8618510100102', 'This is a test from gsm2'));
 
 });
 

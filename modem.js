@@ -13,6 +13,8 @@ function Modem(port, options){
   if(!(this instanceof Modem))
     return new Modem(port, options);
   var defaults = {
+    retry   : 500,
+    timeout : 5000,
     dataBits: 8,
     stopBits: 1,
     baudRate: 9600,
@@ -23,39 +25,48 @@ function Modem(port, options){
   this.options = defaults;
   this.options.parser = SerialPort.parsers.raw;
   SerialPort.call(this, port, this.options);
-  var buffer = '';
+  var output = '';
   var regexp = /(\r?(.+)\r)?\r\n(.+)\r\n$/;
-  this.on('data', function(chunk){
-    buffer += chunk;
-    if(regexp.test(buffer)){
-      var m = regexp.exec(buffer);
-      var p = m[3].split(/:\s?/);
-      self.emit('message', m[3], m);
-      if(p.length === 2) this.emit(p[0], p[1]);
-      buffer = '';
+  this.on('data', chunk => {
+    output += chunk;
+    if(/>/.test(output)){
+      this.emit('message', output);
+      output = '';
+      return;
     }
+    if(regexp.test(output)){
+      var m = regexp.exec(output);
+      this.emit('message', m[3], m);
+      output = '';
+    }
+  }).on('message', message => {
+    var p = message.split(/:\s?/);
+    if(p.length === 2) this.emit(p[0], p[1]);
   });
-  this.queue = async.queue(function(task, done){
-    self.write(task.data);
+  this.queue = async.queue((task, done) => {
+    this.write(task.data + '\r');
     function onMessage(message){
-      clearInterval(timer);
-      clearTimeout(timeout);
-      task.accept(message);
-      self.removeListener('message', onMessage);
+      clearInterval(this.retry);
+      clearTimeout(this.timeout);
+      if(/ERROR/.test(message)){
+        task.reject(message);
+      }else{
+        task.accept(message);
+      }
+      this.removeListener('message', onMessage);
       done();
     }
-    self.on('message', onMessage);
-    var timer = setInterval(() => {
+    this.on('message', onMessage);
+    this.retry = setInterval(() => {
+      this.write(task.data + '\r');
       // process.stdout.write('.');
-      self.write(task.data);
-    }, 500);
-    var timeout = setTimeout(() => {
+    }, this.options.retry);
+    this.timeout = setTimeout(() => {
+      clearInterval(this.retry);
+      task.reject(new Error('Timeout exceeded'));
+      this.removeListener('message', onMessage);
       done();
-      clearInterval(timer);
-      console.log('timeout');
-      task.reject(new Error('timeout'));
-      self.removeListener('message', onMessage);
-    }, 3000);
+    }, this.options.timeout);
   });
   return this;
 };
@@ -63,7 +74,7 @@ function Modem(port, options){
 util.inherits(Modem, SerialPort);
 
 Modem.prototype.send = function(data){
-  var command = { data: data + '\r' };
+  var command = { data: data };
   command.promise = new Promise((accept, reject) => {
     command.accept = accept;
     command.reject = reject;
@@ -92,8 +103,20 @@ Modem.prototype.id = function() {
   return this.send('ATI');
 };
 
-Modem.prototype.clock = function() {
-  return this.test('CCLK');
+Modem.prototype.sn = function() {
+  
+};
+
+Modem.prototype.imsi = function() {
+  return this.test('CIMI').then(isOK => {
+    return this.exec('CIMI');
+  })
+};
+
+Modem.prototype.model = function() {
+  return this.test('CGMM').then(isOK => {
+    return this.exec('CGMM');
+  })
 };
 
 Modem.prototype.version = function() {
@@ -110,23 +133,15 @@ Modem.prototype.manufacturer = function() {
   })
 };
 
-Modem.prototype.imsi = function() {
-  return this.test('CIMI').then(isOK => {
-    return this.exec('CIMI');
-  })
-};
-
-Modem.prototype.model = function() {
-  return this.test('CGMM').then(isOK => {
-    return this.exec('CGMM');
-  })
+Modem.prototype.clock = function() {
+  return this.test('CCLK');
 };
 
 Modem.prototype.signal_strength = function() {
-  return this.test('CSQ').then(isOK => {
-    this.get('CSQ').then(res => {
-      return res.match(/\+CSQ:\s(.+)/)[1];
-    });
+  return this.test('CSQ').then(() => {
+    // this.get('CSQ').then(res => {
+    //   return res.match(/\+CSQ:\s(.+)/)[1];
+    // });
     return this.exec('CSQ').then(res => {
       res = res.match(/\+CSQ:\s*(.+)/);
       res = res[1].split(',');
@@ -134,19 +149,7 @@ Modem.prototype.signal_strength = function() {
         rssi: res[0],
         ber : res[1]        
       };
-    });
-  })
-};
-
-Modem.prototype.imei = function(value, imei) {
-  if(typeof value !== 'undefined'){
-    value = [ 
-      value, 7, value ? imei : null 
-    ].filter(Boolean).join(',');
-    return this.set('EGMR', value);
-  }
-  return this.test('GSN').then(isOK => {
-    return this.exec('GSN');
+    })
   });
 };
 
@@ -154,9 +157,33 @@ Modem.prototype.sms_center = function() {
   return this.test('CSCA');
 };
 
-Modem.prototype.sms_list = function() {
-  return this.set('CMGL', 4);
+Modem.prototype.sms_mode = function(mode) {
+  return this.set('CMGF', mode || 0);
 };
+
+Modem.prototype.sms_list = function(mode) {
+  return this.get('CMGL').then(str => {
+    return /\((.+)\)/.exec(str)[1]
+      .split(',')
+      .map(s => s.replace(/["']/g, ''));
+  }).then(modes => {
+    return this.set('CMGL', modes[ mode || 0 ]);
+  });
+};
+
+Modem.prototype.sms_read = function(index){
+  return this.set('CMGR', index);
+}
+
+Modem.prototype.sms_send = function(number, content) {
+  return this.set('CMGS', `"${number}"`).then(x => {
+    return this.send(content + '\u001a');
+  });
+};
+
+Modem.prototype.sms_delete = function(index){
+  return this.set('CMGD', index);
+}
 
 Modem.prototype.debug = function(n){
   return this.set('CMEE', n | 0);
@@ -168,6 +195,10 @@ Modem.prototype.dial = function(number, mgsm) {
 
 Modem.prototype.hangup = function() {
   return this.send('ATH');
+};
+
+Modem.prototype.echo = function(n){
+  return this.exec('ATE' + (n | 0));
 };
 
 Modem.prototype.reset = function(value) {

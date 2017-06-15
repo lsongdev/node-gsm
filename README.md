@@ -2,25 +2,23 @@
 
 gsm modem module for node.js
 
-***[WORKING IN PROGRESS, PLEASE DO NOT USE IN PRODUCTION MODE]***
-
 ### Installation
 
 ```bash
-$ npm i gsm2
+$ npm i gsm2 --save
 ```
 
 ### Example
 
 ```js
-const gsm     = require('gsm2');
-const Message = require('gsm2/pdu');
+const gsm = require('gsm2');
 
 const modem = new gsm.Modem('/dev/gsm-modem');
 
-const id = yield modem.id();
-
-console.log(id); // SIM900 R11.0
+yield modem.sms_send(
+  '+8618510100102', 
+  'This is a test from gsm2'
+);
 ```
 
 ### API
