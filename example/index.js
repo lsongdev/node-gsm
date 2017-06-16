@@ -20,9 +20,12 @@ modem.open(() => {
 
 co(function*(){
 
-	yield modem.reset()
-	yield modem.sms_mode(1)
-	console.log(yield modem.sms_send('+8618510100102', 'This is a test from gsm2'));
+  yield modem.reset()
+  yield modem.sms_mode(1)
+  yield modem.sms_send(
+    '+8618510100102',
+    'This is a test from gsm2'
+  );
 
 });
 
