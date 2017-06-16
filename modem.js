@@ -13,7 +13,7 @@ function Modem(port, options){
   if(!(this instanceof Modem))
     return new Modem(port, options);
   var defaults = {
-    retry   : 500,
+    retry   : 0,
     timeout : 5000,
     dataBits: 8,
     stopBits: 1,
@@ -57,16 +57,17 @@ function Modem(port, options){
       done();
     }
     this.on('message', onMessage);
-    this.retry = setInterval(() => {
-      this.write(task.data + '\r');
-      // process.stdout.write('.');
-    }, this.options.retry);
     this.timeout = setTimeout(() => {
       clearInterval(this.retry);
       task.reject(new Error('Timeout exceeded'));
       this.removeListener('message', onMessage);
       done();
     }, this.options.timeout);
+    if(this.options.retry || task.retry){
+      this.retry = setInterval(() => {
+        this.write(task.data + '\r');
+      }, task.retry || this.options.retry);
+    }
   });
   return this;
 };
