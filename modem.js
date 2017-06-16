@@ -44,7 +44,9 @@ function Modem(port, options){
     if(p.length === 2) this.emit(p[0], p[1]);
   });
   this.queue = async.queue((task, done) => {
-    this.write(task.data + '\r');
+    // Syntax:
+    // AT<command ...><CR>
+    this.write(task.data + '\r', ()=>this.drain());
     function onMessage(message){
       clearInterval(this.retry);
       clearTimeout(this.timeout);
@@ -57,15 +59,17 @@ function Modem(port, options){
       done();
     }
     this.on('message', onMessage);
-    this.timeout = setTimeout(() => {
-      clearInterval(this.retry);
-      task.reject(new Error('Timeout exceeded'));
-      this.removeListener('message', onMessage);
-      done();
-    }, this.options.timeout);
+    if(this.options.timeout || task.timeout){
+      this.timeout = setTimeout(() => {
+        clearInterval(this.retry);
+        task.reject(new Error('Timeout exceeded'));
+        this.removeListener('message', onMessage);
+        done();
+      }, task.timeout || this.options.timeout);
+    }
     if(this.options.retry || task.retry){
       this.retry = setInterval(() => {
-        this.write(task.data + '\r');
+        this.write(task.data + '\r', ()=>this.drain());
       }, task.retry || this.options.retry);
     }
   });
