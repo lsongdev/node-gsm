@@ -78,8 +78,8 @@ function Modem(port, options){
 
 util.inherits(Modem, SerialPort);
 
-Modem.prototype.send = function(data){
-  var command = { data: data };
+Modem.prototype.send = function(data, options){
+  var command = Object.assign({ data }, options || {});
   command.promise = new Promise((accept, reject) => {
     command.accept = accept;
     command.reject = reject;
@@ -100,8 +100,8 @@ Modem.prototype.get = function(name){
   return this.send(`AT+${name}=?`);
 };
 
-Modem.prototype.set = function(name, value){
-  return this.send(`AT+${name}=${value}`);
+Modem.prototype.set = function(name, value, options){
+  return this.send(`AT+${name}=${value}`, options);
 };
 
 Modem.prototype.id = function() {
@@ -181,7 +181,7 @@ Modem.prototype.sms_read = function(index){
 }
 
 Modem.prototype.sms_send = function(number, content) {
-  return this.set('CMGS', `"${number}"`).then(x => {
+  return this.set('CMGS', `"${number}"`, { retry: 0 }).then(x => {
     return this.send(content + '\u001a');
   });
 };

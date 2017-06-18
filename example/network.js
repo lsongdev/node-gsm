@@ -1,20 +1,24 @@
-
-const gsm = require('gsm2');
+const co  = require('co');
+const gsm = require('..');
 
 const modem = new gsm.Modem(
-  '/dev/tty.usbserial'
+  '/dev/tty.usbserial', {
+    retry: 1000
+  }
 );
 
-const network = new gsm.GPRS(modem);
+modem.open(() => co(function*(){
+    
+  const network = new gsm.GPRS(modem);
 
-yield network.init();
+  yield network.init();
 
-const request = network.request({
-  method: 'get',
-  url   : 'http://api.lsong.org'
-}, response => {
-  // stream
-  console.log(response);
-});
+  // const request = network.request({
+  //   method: 'get',
+  //   url   : 'http://api.lsong.org'
+  // }, response => {
+  //   // stream
+  //   console.log(response);
+  // }).send();
 
-request.send();
+}));

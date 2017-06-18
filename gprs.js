@@ -1,9 +1,14 @@
 
 function GPRS(modem, options){
-  this.device = modem;
+  this.modem = modem;
   this.options = options;
   return this;
 }
+
+GPRS.prototype.init = function*(){
+  console.log(yield this.modem.set('CGREG', 2));
+  console.log(yield this.modem.test('CGREG'));
+};
 
 GPRS.Request = function(options){
 
@@ -19,3 +24,5 @@ GPRS.prototype.request = function(options){
   this.emit('response', response);
   return request;
 };
+
+module.exports = GPRS;
