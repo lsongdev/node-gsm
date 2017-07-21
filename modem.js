@@ -59,18 +59,20 @@ function Modem(port, options){
       done();
     }
     this.on('message', onMessage);
-    if(this.options.timeout || task.timeout){
+    // to temporary disable timeout use: null, 0, false
+    if((task.timeout !== undefined ? task.timeout : this.options.timeout)){
       this.timeout = setTimeout(() => {
         clearInterval(this.retry);
         task.reject(new Error('Timeout exceeded'));
         this.removeListener('message', onMessage);
         done();
-      }, task.timeout || this.options.timeout);
+      }, +(task.timeout || this.options.timeout));
     }
-    if(this.options.retry || task.retry){
+    // to temporary disable retry use: null, 0, false
+    if((task.retry !== undefined ? task.retry : this.options.retry)){
       this.retry = setInterval(() => {
         this.write(task.data + '\r', ()=>this.drain());
-      }, task.retry || this.options.retry);
+      }, +(task.retry || this.options.retry));
     }
   });
   return this;
@@ -181,6 +183,7 @@ Modem.prototype.sms_read = function(index){
 }
 
 Modem.prototype.sms_send = function(number, content) {
+  // temporary disable retry.
   return this.set('CMGS', `"${number}"`, { retry: 0 }).then(x => {
     return this.send(content + '\u001a');
   });
