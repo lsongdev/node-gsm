@@ -21,6 +21,8 @@ yield modem.sms_send(
 );
 ```
 
+![](./sim900.jpg)
+
 ### API
 check this file: `index.js`
 

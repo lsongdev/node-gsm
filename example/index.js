@@ -1,4 +1,3 @@
-const co  = require('co');
 const gsm = require('..');
 
 const modem = new gsm.Modem(
@@ -16,18 +15,14 @@ modem.on('message', (message, m) => {
   // console.log(message);
 });
 
-modem.open(() => {
+modem.open(async () => {
 
-co(function*(){
-
-  yield modem.reset()
-  yield modem.sms_mode(1)
-  yield modem.sms_send(
+  await modem.reset()
+  await modem.sms_mode(1)
+  await modem.sms_send(
     '+8618510100102',
     'This is a test from gsm2'
   );
-
-});
 
 });
 
