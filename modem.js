@@ -59,18 +59,20 @@ function Modem(port, options){
       done();
     }
     this.on('message', onMessage);
-    if(this.options.timeout || task.timeout){
+    // to temporary disable timeout use: null, 0, false
+    if((task.timeout !== undefined ? task.timeout : this.options.timeout)){
       this.timeout = setTimeout(() => {
         clearInterval(this.retry);
         task.reject(new Error('Timeout exceeded'));
         this.removeListener('message', onMessage);
         done();
-      }, task.timeout || this.options.timeout);
+      }, +(task.timeout || this.options.timeout));
     }
-    if(this.options.retry || task.retry){
+    // to temporary disable retry use: null, 0, false
+    if((task.retry !== undefined ? task.retry : this.options.retry)){
       this.retry = setInterval(() => {
         this.write(task.data + '\r', ()=>this.drain());
-      }, task.retry || this.options.retry);
+      }, +(task.retry || this.options.retry));
     }
   });
   return this;
@@ -78,8 +80,8 @@ function Modem(port, options){
 
 util.inherits(Modem, SerialPort);
 
-Modem.prototype.send = function(data){
-  var command = { data: data };
+Modem.prototype.send = function(data, options){
+  var command = Object.assign({ data }, options || {});
   command.promise = new Promise((accept, reject) => {
     command.accept = accept;
     command.reject = reject;
@@ -100,8 +102,8 @@ Modem.prototype.get = function(name){
   return this.send(`AT+${name}=?`);
 };
 
-Modem.prototype.set = function(name, value){
-  return this.send(`AT+${name}=${value}`);
+Modem.prototype.set = function(name, value, options){
+  return this.send(`AT+${name}=${value}`, options);
 };
 
 Modem.prototype.id = function() {
@@ -181,7 +183,8 @@ Modem.prototype.sms_read = function(index){
 }
 
 Modem.prototype.sms_send = function(number, content) {
-  return this.set('CMGS', `"${number}"`).then(x => {
+  // temporary disable retry.
+  return this.set('CMGS', `"${number}"`, { retry: 0 }).then(x => {
     return this.send(content + '\u001a');
   });
 };

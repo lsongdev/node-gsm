@@ -1,15 +1,17 @@
 const gsm = require('..');
 
 const modem = new gsm.Modem(
-  '/dev/tty.usbserial'
+  '/dev/tty.usbserial', {
+    retry: 1000
+  }
 );
 
-modem.on('+CRING', console.log)
+modem.on('+CRING', console.log.bind('Ringing'))
 modem.on('+CLIP', (number) => {
   console.log('Incoming Call', number);
 })
-modem.on('+CMTI', () => {
-  console.log('Incoming Message');
+modem.on('+CMTI', (msg) => {
+  console.log('Incoming Message', msg);
 });
 modem.on('message', (message, m) => {
   // console.log(message);
