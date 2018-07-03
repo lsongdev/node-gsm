@@ -1,5 +1,6 @@
 .DS_*
 *.log
+yarn.lock
 logs
 **/*.backup.*
 **/*.back.*
