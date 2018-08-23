@@ -3,7 +3,7 @@
   "version": "1.0.3",
   "main": "index.js",
   "scripts": {
-    "test": "mocha"
+    "test": "node ./test/test.js"
   },
   "author": "lsong",
   "license": "MIT",
@@ -15,7 +15,6 @@
   "description": "gsm modem module for node.js",
   "dependencies": {
     "async": "^2.4.1",
-    "iconv-lite": "^0.4.23",
     "serialport": "^4.0.3"
   },
   "directories": {

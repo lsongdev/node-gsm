@@ -15,13 +15,27 @@ const gsm = require('gsm2');
 
 const modem = new gsm.Modem('/dev/gsm-modem');
 
-yield modem.sms_send(
-  '+8618510100102', 
-  'This is a test from gsm2'
-);
+modem.on('+CRING', console.log.bind('Ringing'))
+modem.on('+CLIP', number => {
+  console.log('Incoming Call', number);
+})
+modem.on('+CMTI', msg => {
+  console.log('Incoming Message', msg);
+});
+
+modem.open(async () => {
+
+  await modem.reset()
+  await modem.sms_mode(1)
+  await modem.sms_send(
+    '+8618510100102',
+    'This is a test from gsm2'
+  );
+
+});
 ```
 
-![](./sim900.jpg)
+![sim900](./sim900.jpg)
 
 ### API
 check this file: `index.js`

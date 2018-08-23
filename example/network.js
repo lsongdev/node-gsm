@@ -1,4 +1,3 @@
-const co  = require('co');
 const gsm = require('..');
 
 const modem = new gsm.Modem(
@@ -7,18 +6,19 @@ const modem = new gsm.Modem(
   }
 );
 
-modem.open(() => co(function*(){
-    
-  const network = new gsm.GPRS(modem);
+const network = new gsm.Network(modem);
 
-  yield network.init();
+(async () => {
 
-  // const request = network.request({
-  //   method: 'get',
-  //   url   : 'http://api.lsong.org'
-  // }, response => {
-  //   // stream
-  //   console.log(response);
-  // }).send();
+  await network.init();
+  
+  network.request({
+    hostname: 'lsong.org',
+    method: 'GET',
+    path: '/'
+  }, (err, res) => {
+    console.log(err, res);
+  });
 
-}));
+
+})();

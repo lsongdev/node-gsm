@@ -1,8 +1,7 @@
+const Modem = require('./modem');
 
-function SMS(modem, options){
-  this.device = modem;
-  this.options = options;
-  return this;
+class SMS extends Modem {
+
 }
 
 module.exports = SMS;

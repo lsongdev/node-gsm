@@ -1,16 +1,12 @@
 "use strict";
 const util         = require('util');
 const async        = require('async');
-const EventEmitter = require('events');
-const iconv        = require('iconv-lite');
 const SerialPort   = require('serialport');
-const PDU          = require('./pdu');
 /**
  * [Modem description]
  * @param {[type]} options [description]
  */
 function Modem(port, options){
-  const self = this;
   if(!(this instanceof Modem))
     return new Modem(port, options);
   var defaults = {
@@ -183,8 +179,7 @@ Modem.prototype.sms_read = function(index){
   return this.set('CMGR', index);
 }
 
-Modem.prototype.sms_send = function(number, content, encoding) {
-  content = iconv.encode(content, encoding || this.encoding)
+Modem.prototype.sms_send = function(number, content) {
   // temporary disable retry.
   return this.set('CMGS', `"${number}"`, { retry: 0 }).then(x => {
     return this.send(content + '\u001a');
