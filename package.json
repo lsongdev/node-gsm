@@ -15,7 +15,7 @@
   "description": "gsm modem module for node.js",
   "dependencies": {
     "async": "^3.2.4",
-    "serialport": "^10.4.6"
+    "serialport": "^10.4.0"
   },
   "directories": {
     "example": "example"
