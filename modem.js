@@ -1,7 +1,7 @@
 "use strict";
 const util         = require('util');
 const async        = require('async');
-const SerialPort   = require('serialport');
+const {SerialPort} = require('serialport');
 /**
  * [Modem description]
  * @param {[type]} options [description]
@@ -14,14 +14,18 @@ function Modem(port, options){
     timeout : 5000,
     dataBits: 8,
     stopBits: 1,
-    baudRate: 9600,
+    baudRate: 115200,
     autoOpen: false
   };
   for(var k in options)
     defaults[k] = options[k];
   this.options = defaults;
-  this.options.parser = SerialPort.parsers.raw;
-  SerialPort.call(this, port, this.options);
+  
+  Object.assign(this, new SerialPort({
+    path: port,
+    ...this.options
+  }));
+  
   var output = '';
   var regexp = /(\r?(.+)\r)?\r\n(.+)\r\n$/;
   this.on('data', chunk => {
