@@ -1,7 +1,7 @@
-const Modem = require('./modem');
+import { Modem } from './modem.js';
 
-class GPRS extends Modem {
-  
+export class GPRS extends Modem {
+    request() {
+
+    }
 }
-
-module.exports = GPRS;

@@ -1,6 +1,6 @@
 ## gsm2 ![NPM version](https://img.shields.io/npm/v/gsm2.svg?style=flat)
 
-gsm modem module for node.js
+> GSM Modem module for Node.js
 
 ### Installation
 
@@ -11,7 +11,7 @@ $ npm i gsm2 --save
 ### Example
 
 ```js
-const gsm = require('gsm2');
+import * as gsm from 'gsm2';
 
 const modem = new gsm.Modem('/dev/gsm-modem');
 

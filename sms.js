@@ -1,6 +1,6 @@
-const Modem = require('./modem');
+import { Modem } from './modem.js';
 
-class SMS extends Modem {
+export class SMS extends Modem {
   sms_center() {
     return this.test('CSCA');
   }
@@ -29,5 +29,3 @@ class SMS extends Modem {
     return this.set('CMGD', index);
   }
 }
-
-module.exports = SMS;

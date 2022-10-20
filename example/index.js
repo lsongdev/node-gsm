@@ -1,9 +1,9 @@
-const gsm = require('..');
+import * as gsm from '../index.js';
 
 const modem = new gsm.Modem(
   '/dev/tty.usbserial', {
-    retry: 1000
-  }
+  retry: 1000
+}
 );
 
 modem.on('+CRING', console.log.bind('Ringing'))

@@ -1,24 +1,20 @@
-const gsm = require('..');
+import { GPRS } from "../index.js";
 
-const modem = new gsm.Modem(
+const network = new GPRS(
   '/dev/tty.usbserial', {
     retry: 1000
   }
 );
 
-const network = new gsm.Network(modem);
-
 (async () => {
 
   await network.init();
   
-  network.request({
+  const res = await network.request({
     hostname: 'lsong.org',
     method: 'GET',
     path: '/'
-  }, (err, res) => {
-    console.log(err, res);
   });
-
+  console.log(res);
 
 })();

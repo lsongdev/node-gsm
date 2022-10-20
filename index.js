@@ -1,12 +1,5 @@
 
-function GSM(){
-  
-}
-
-// exports
-GSM.PDU   = require('./pdu');
-GSM.SMS   = require('./sms');
-GSM.GPRS  = require('./gprs');
-GSM.Modem = require('./modem');
-
-module.exports = GSM;
+export * from './pdu.js';
+export * from './sms.js';
+export * from './gprs.js';
+export * from './modem.js';

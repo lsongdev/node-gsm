@@ -1,11 +1,14 @@
 "use strict";
-const async = require('async');
-const { SerialPort } = require('serialport');
+import { debuglog } from 'util';
+import * as async from "async";
+import { SerialPort } from 'serialport';
+
+const debug = debuglog('gsm2');
 /**
  * [Modem description]
  * @param {[type]} options [description]
  */
-class Modem extends SerialPort {
+export class Modem extends SerialPort {
   constructor(port, options) {
     Object.assign(options, {
       retry: 0,
@@ -39,6 +42,7 @@ class Modem extends SerialPort {
       if (p.length === 2) this.emit(p[0], p[1]);
     });
     this.queue = async.queue((task, done) => {
+      debug('task', task);
       // Syntax:
       // AT<command ...><CR>
       this.write(task.data + '\r', () => this.drain());
@@ -152,5 +156,3 @@ class Modem extends SerialPort {
     return this.send('ATH');
   }
 }
-
-module.exports = Modem;
